@@ -1,0 +1,42 @@
+.measuring-tool{
+	width: 500px;
+	height: 400px;
+	text-align: center;
+	background: white;
+	overflow: hidden;
+	position: relative;
+}
+
+.measuring-tool .ruler{
+	background: yellow;
+	box-shadow: 0px 1px 1px 1px rgba(0,0,0,0.2);
+	height: 40px;
+	display: inline-block;
+	white-space: nowrap;
+	position: absolute;
+
+	bottom: 0px;
+	left: 0px;
+}
+
+.measuring-tool .ruler-increment{
+	height: 10px;
+	border-right: 1px solid black;
+	box-sizing: border-box;
+	display: inline-block;
+	position: relative;
+	vertical-align: top;
+}
+
+.measuring-tool .ruler-number{
+	position: absolute;
+	right:-10px;
+	bottom:-15px;
+	font-size: 12px;
+	width: 20px;
+	text-align: center
+}
+
+.measuring-tool img{
+	display: inline-block;
+}

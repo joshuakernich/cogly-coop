@@ -1,0 +1,473 @@
+@keyframes floaty {
+	0% {
+		transform: translatey(0px);
+	}
+	50% {
+		transform: translatey(-5px);
+	}
+	100% {
+		transform: translatey(0px);
+	}
+}
+
+@keyframes running-sprite {
+	0%{
+		background-position: -33px;
+	}
+	100%{
+		background-position: -99px;
+	}
+}
+
+@keyframes door-open-sprite {
+	0%{
+		background-position: -0px;
+	}
+	100%{
+		background-position: -900px;
+	}
+}
+
+
+@keyframes flying-sprite {
+	0%{
+		background-position: 0px;
+	}
+	100%{
+		background-position: -64px;
+	}
+}
+
+@keyframes shrink-to-nothing {
+	0%{
+		transform: scale(1);
+	}
+	100%{
+		transform: scale(0);
+	}
+}
+
+.platformer{
+	background-image: url('./img/bg-forest.png');
+	background-size: cover;
+}
+
+.platformer .world{
+	position: absolute;
+	width: 2500px;
+	height: 752px;
+	box-sizing: border-box;
+}
+
+.platformer .layer{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	bottom: 0px;
+	right: 0px;
+}
+
+.platformer .layer.untouchable{
+	pointer-events: none;
+}
+
+.platformer .layer.untouchable *{
+	pointer-events: auto;
+}
+
+.platformer .layer.victory-screen{
+	background: rgba(255,150,0,0.2);
+	font-size: 200px;
+	color: white;
+	font-family: impact;
+	text-shadow: 0px 5px black, 0px 0px 1px black; 
+}
+
+.platformer .hint-panel{
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	padding: 10px;
+}
+
+.platformer .inventory-panel{
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	padding: 10px;
+}
+
+.platformer .player{
+	position: absolute;
+	width: 25px;
+	height: 50px;
+	box-sizing: border-box;
+}
+
+.platformer .player:after{
+	content: "";
+	position: absolute;
+	width: 33px;
+	height: 60px;
+	left: -4px;
+	top: -5px;
+	background-position: left;
+}
+
+.platformer .player.isMe:before{
+	content: "";
+	position: absolute;
+	width: 33px;
+	height: 30px;
+	position: absolute;
+	left: -4px;
+	top: -30px;
+	opacity: 0.8;
+
+	background-image: url('./img/is-me.png');
+	animation: floaty 0.5s ease-in-out infinite;
+}
+
+
+.platformer .player.running:after{
+	background-position: -66px;
+	animation: running-sprite 0.2s steps(2) infinite;
+}
+
+.platformer .player.jumping:after{
+	background-position: -99px 0px;
+}
+
+.platformer .player.n0:after{ background-image: url('./img/character0001.png');}
+.platformer .player.n1:after{ background-image: url('./img/character0002.png');}
+.platformer .player.n2:after{ background-image: url('./img/character0003.png');}
+.platformer .player.n3:after{ background-image: url('./img/character0004.png');}
+.platformer .player.n4:after{ background-image: url('./img/character0005.png');}
+.platformer .player.n5:after{ background-image: url('./img/character0006.png');}
+.platformer .player.n6:after{ background-image: url('./img/character0007.png');}
+.platformer .player.n7:after{ background-image: url('./img/character0008.png');}
+.platformer .player.n8:after{ background-image: url('./img/character0009.png');}
+
+.platformer .box{
+	background: black;
+	position: absolute;
+}
+
+.platformer .door{
+	position: absolute;	
+}
+
+.platformer .door:after{
+	content: "";
+	position: absolute;
+	width: 150px;
+	height: 150px;
+	left: -75px;
+	bottom: -53px;
+	background-image: url('./img/tree.png');
+	background-position: 0px 0px;
+}
+
+.platformer .door.open:after{
+	content: "";
+	animation: door-open-sprite 1s steps(6);
+	animation-fill-mode: forwards;
+}
+
+.platformer .door-popup:before{
+	content: "";
+	position: absolute;
+	left: 10px;
+	right: 10px;
+	top: -110px;
+	height: 80px;
+	border: 30px solid black;
+	border-bottom: none;
+	border-radius: 100px;
+	border-bottom-left-radius: 0px;
+	border-bottom-right-radius: 0px;
+}
+
+.platformer .door-popup:after{
+	content: "";
+	position: absolute;
+	left: 12px;
+	right: 12px;
+	top: -108px;
+	height: 80px;
+	border: 26px solid white;
+	border-bottom: none;
+	border-radius: 100px;
+	border-bottom-left-radius: 0px;
+	border-bottom-right-radius: 0px;
+}
+
+.platformer .door-popup{
+	position: relative;
+	background: #ff9900;
+	border-radius: 5px;
+	
+	white-space: nowrap;
+	text-align: left;
+	border: 2px solid black;
+	padding: 5px 15px;
+}
+
+.platformer .door-question{
+	
+	text-shadow: 0px 1px rgba(255,255,255,0.5);
+}
+
+.platformer .door-question input{
+	width: 20px;
+	height: 20px;
+	margin-bottom: 5px;
+	border-radius: 2px;
+	border: none;
+	border-top: 2px solid rgba(0,0,0,0.2);
+	text-align: center;
+}
+
+.platformer .door-question input.correct{
+	border-color: #A8C92E;
+	color: #A8C92E;
+}
+
+.platformer .door-question input.incorrect{
+	border-color: #DB7662;
+	color: #DB7662;
+}
+
+.platformer .btn-check{
+	background:#A8C92E;
+	border:none;
+	width: 100%;
+	border-radius: 5px;
+	border-top: 1px solid rgba(255,255,255,0.5);
+	border-bottom: 2px solid rgba(0,0,0,0.3);
+	text-shadow: 0px 1px rgba(255,255,255,0.5);
+}
+
+.platformer .switch{
+	position: absolute;	
+}
+
+.platformer .switch:after{
+	content: "";
+	position: absolute;
+	width: 50px;
+	height: 60px;
+	left: -25px;
+	bottom: -23px;
+	background-image: url('./img/switch0001.png');
+}
+
+.platformer .switch.n0:after{ background-image: url('./img/switch0001.png'); }
+.platformer .switch.n1:after{ background-image: url('./img/switch0002.png'); }
+.platformer .switch.n2:after{ background-image: url('./img/switch0003.png'); }
+.platformer .switch.n3:after{ background-image: url('./img/switch0004.png'); }
+.platformer .switch.n4:after{ background-image: url('./img/switch0005.png'); }
+.platformer .switch.n5:after{ background-image: url('./img/switch0006.png'); }
+.platformer .switch.n6:after{ background-image: url('./img/switch0007.png'); }
+.platformer .switch.n7:after{ background-image: url('./img/switch0008.png'); }
+.platformer .switch.n8:after{ background-image: url('./img/switch0009.png'); }
+
+
+.platformer .artefact{
+	
+	border-radius: 100px;
+	box-sizing: border-box;
+	position: absolute;
+	animation: floaty 1s ease-in-out infinite;
+}
+
+.platformer .artefact:after{
+	content: "";
+	position: absolute;
+	background-position: 0px 0px;
+	width: 30px;
+	height: 30px;
+	left: -3px;
+	top: -3px;
+}
+
+.platformer .artefact.n0:after{ background-image: url('./img/icon0001.png'); }
+.platformer .artefact.n1:after{ background-image: url('./img/icon0002.png'); }
+.platformer .artefact.n2:after{ background-image: url('./img/icon0003.png'); }
+.platformer .artefact.n3:after{ background-image: url('./img/icon0004.png'); }
+.platformer .artefact.n4:after{ background-image: url('./img/icon0005.png'); }
+.platformer .artefact.n5:after{ background-image: url('./img/icon0006.png'); }
+.platformer .artefact.n6:after{ background-image: url('./img/icon0007.png'); }
+.platformer .artefact.n7:after{ background-image: url('./img/icon0008.png'); }
+.platformer .artefact.n8:after{ background-image: url('./img/icon0009.png'); }
+
+.platformer .artefact.book:after{ background-position: 0px 0px; }
+.platformer .artefact.video:after{ background-position: -30px 0px; }
+.platformer .artefact.scrap:after{ background-position: -60px 0px; }
+.platformer .artefact.tool:after{ background-position: -90px 0px; }
+
+.platformer .popup{
+	position: absolute;
+	background: rgba(200,200,200,0.8);
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	white-space: nowrap;
+}
+
+.platformer .popup-vert{
+	height: 100%;
+	vertical-align: middle;
+	display: inline-block;
+	width: 0px;
+}
+
+.platformer .popup-content-panel{
+	display: inline-block;
+	vertical-align: middle;
+	position: relative;
+}
+
+.platformer .popup-content{
+	
+}
+
+.platformer .popup-close-button{
+	width: 100px;
+	height: 100px;
+	position: absolute;
+	background: orange;
+	bottom: -20px;
+	right: -80px;
+	background-color: #00CC66;
+	background-image: url('./img/thumbs-up.png');
+	border-bottom: 2px solid rgba(0,0,0,0.2);
+	border-radius: 100px;
+	cursor: pointer;
+}
+
+.platformer .platform{
+	background: url('./img/platform.png');
+	position: absolute;
+	height: 30px;
+}
+
+.platformer .chat{
+	position: absolute;
+}
+
+.platformer .inventory-button{
+	width: 50px;
+	height: 50px;
+	border-radius: 25px;
+	background: rgba(255,255,255,0.3);
+	margin: 5px;
+	position: relative;
+	border-bottom: 2px solid rgba(0,0,0,0.2);
+}
+
+.platformer .inventory-button:after{
+	content: "";
+	position: absolute;
+	width: 30px;
+	height: 30px;
+	left: 10px;
+	top: 10px;	
+}
+
+.platformer .inventory-button.book:after{ background-position: 0px 0px; }
+.platformer .inventory-button.video:after{ background-position: -30px 0px; }
+.platformer .inventory-button.scrap:after{ background-position: -60px 0px; }
+.platformer .inventory-button.tool:after{ background-position: -90px 0px; }
+
+.platformer .inventory-button.n0:after{ background-image: url('./img/icon0001.png'); }
+.platformer .inventory-button.n1:after{ background-image: url('./img/icon0002.png'); }
+.platformer .inventory-button.n2:after{ background-image: url('./img/icon0003.png'); }
+.platformer .inventory-button.n3:after{ background-image: url('./img/icon0004.png'); }
+.platformer .inventory-button.n4:after{ background-image: url('./img/icon0005.png'); }
+.platformer .inventory-button.n5:after{ background-image: url('./img/icon0006.png'); }
+.platformer .inventory-button.n6:after{ background-image: url('./img/icon0007.png'); }
+.platformer .inventory-button.n7:after{ background-image: url('./img/icon0008.png'); }
+.platformer .inventory-button.n8:after{ background-image: url('./img/icon0009.png'); }
+
+.platformer .teacher{
+	position: absolute;
+}
+
+.platformer .teacher:after{
+	content: "";
+	display: inline-block;
+	width: 32px;
+	height: 46px;
+	top: -23px;
+	left: -16px;
+	position: absolute;
+	background-image: url('./img/owl.png');
+
+	animation: flying-sprite 0.4s steps(2) infinite;
+}
+
+.platformer .activator{
+	width: 200px;
+	height: 200px;
+	background: rgba(255,120,0,0.1);
+	position: absolute;
+	left: -100px;
+	top: -100px;
+	border-radius: 100px;
+	border: 1px solid rgba(255,120,0,1);
+	box-sizing: border-box;
+}
+
+.platformer .target{
+	position: absolute;
+	animation: shrink-to-nothing 1s;
+	animation-fill-mode: forwards;
+}
+
+.platformer .target:before{
+	content:"";
+	position: absolute;
+	width: 2px;
+	height: 50px;
+	left: -1px;
+	top: -25px;
+	background: orange;
+}
+
+.platformer .target:after{
+	content:"";
+	position: absolute;
+	width: 50px;
+	height: 2px;
+	left: -25px;
+	top: -1px;
+	background: orange;
+}
+
+.platformer .reset-button{
+	position: fixed;
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	border: none;
+	font-size: 10px;
+	font-family: Arial;
+	opacity: 0.3;
+	padding: 0px;
+	height: 25px;
+	width: 55px;
+	background: none;
+	cursor: pointer;
+	z-index: 1;
+	outline: none;
+}
+
+.platformer .reset-button:hover{
+	opacity: 1;
+}
+
+.platformer .reset-button:after{
+	content: "RESET";
+}

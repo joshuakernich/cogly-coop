@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css?family=Slabo+27px');
+
+body{
+	margin: 0px;
+	padding: 0px;
+	font-family: 'Slabo 27px', serif;
+	font-size: 20px;
+	text-align: center;
+	background: gray;
+	background: url('./img/bg.png');
+}
+
+button{
+	font-family: inherit;
+	font-size: inherit;
+	cursor: pointer;
+	padding: 10px;
+}
+
+.input-panel{
+	padding: 40px;
+	background: rgba(255,255,255,0.7);
+	display: inline-block;
+	text-align: center;
+	position: relative;
+	top: -1px;
+	border: 1px solid rgba(255,255,255,0.8);
+}
+
+input{
+	padding: 10px;
+	font-family: inherit;
+	font-size: inherit;
+}
+
+.input-panel input, .input-panel button{
+	display: block;
+	margin-top: 20px;
+}
+
+.input-panel button{
+	width: 100%;
+	background: orange;
+	border: none;
+}
+
+.game{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100vw;
+	height: 100vh;
+	background: white;
+	overflow: hidden;
+}
+
