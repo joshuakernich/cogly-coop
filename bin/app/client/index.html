@@ -10,8 +10,9 @@
 		$(document).ready(init)
 
 		function init(){
+			var isTeacher = window.location.search.indexOf('teacher') > -1
 			requirejs(["student"], function(App) {
-				var app = new App();
+				var app = new App(isTeacher);
 			});
 		}
 

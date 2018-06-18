@@ -113,6 +113,11 @@
 	outline: 2px solid black;
 }
 
+.chat-box .chat-stream{
+	max-height: 300px;
+	overflow: scroll;
+}
+
 .chat-box .chat-message{
 	background: #eee;
 	padding: 5px;
@@ -122,6 +127,8 @@
 	width: 200px;
 	position: relative;
 	overflow: hidden;
+	border: 1px solid rgba(0,0,0,0.1);
+	border-bottom: 1px solid rgba(0,0,0,0.3);
 }
 
 .chat-message.isMe{
@@ -137,6 +144,7 @@
 .chat-message.n6{ background-color:#D776B5;}
 .chat-message.n7{ background-color:#B781E2;}
 .chat-message.n8{ background-color:#928CDE;}
+.chat-message.nteacher{ background-color:#C79697;}
 
 .chat-message.isMe .chat-emote{
 	display: none;

@@ -40,7 +40,7 @@ define(['core/chat'], function(ChatBox) {
 
     	function DebugDraw(socket){
             var scale = 5;
-            var w = 50
+            var w = 150
             var h = 50;
 
             this.$el = $('<canvas width='+w*scale+' height='+h*scale+'/>')
@@ -93,8 +93,13 @@ define(['core/chat'], function(ChatBox) {
     	socket.on('hints',onHintList);
         socket.on('chat-from-room',onChatFromRoom);
         socket.on('victory',onVictory);
+        socket.on('reset',onReset);
 
         $elPopup.hide();
+
+        function onReset(){
+            chatBox.reset();
+        }
 
         function onVictory(){
             $elEnding.show();
@@ -112,9 +117,7 @@ define(['core/chat'], function(ChatBox) {
         }
 
         function onHintList(list){
-            for(var hint in list){
-                //$("<div class='hint-button'>").appendTo($elHints);
-            }
+            
         }
 
         function onArtefact(content){
@@ -246,16 +249,26 @@ define(['core/chat'], function(ChatBox) {
                     } else if(list[id].type == 'door'){
                         dynamics[id] = new Door(list[id]);
                         $elMG.append(dynamics[id].$el);
-                    } else if(list[id].type == 'switch'){
-                        dynamics[id] = new Switch(list[id]);
+                    } else if(list[id].type == 'switchset'){
+                        dynamics[id] = new SwitchSet(list[id]);
                         $elMG.append(dynamics[id].$el);
                     }
-    				
     			}
+
+                if(id == socket.id) var me = dynamics[id]
+  
                 dynamics[id].update(list[id]);
     			dynamics[id].markForRemoval = false;
     		}
 
+            var inventory = []
+            for(var id in list){
+                if(list[id].claimed && (list[id].type == 'switchset' || list[id].n == me.n)){
+                    inventory.push(list[id])
+                }
+            }
+
+            syncArtefactInventory(inventory,me.n)
 
             for(var id in dynamics){
                 if(dynamics[id].markForRemoval){
@@ -267,6 +280,7 @@ define(['core/chat'], function(ChatBox) {
 
         function Artefact(bean){
             this.n = bean.n;
+            this.claimed = false;
 
             var $el = $('<div class="artefact">');
             $el.addClass(bean.content.type);
@@ -287,6 +301,12 @@ define(['core/chat'], function(ChatBox) {
                     $el.removeClass('n0 n1 n2 n3 n4 n5 n6 n7 n8 n9');
                     $el.addClass('n'+bean.n);
                 }
+
+                if(this.claimed != bean.claimed){
+                    this.claimed = bean.claimed;
+                    $el.hide();
+                    if(!this.claimed) $el.show();
+                }
             }
 
             this.die = function(){
@@ -299,11 +319,7 @@ define(['core/chat'], function(ChatBox) {
             var $el = $('<div class="door">');
             $el.css({left:bean.x*SCALE,bottom:bean.y*SCALE})    
 
-            
-
             this.$el = $el;
-
-
 
             this.update = function(bean){
                 if(bean.isOpen && !isOpen){
@@ -317,15 +333,62 @@ define(['core/chat'], function(ChatBox) {
             }
         }
 
-        function Switch(bean){
-            var $el = $('<div class="switch">');
-            $el.css({left:bean.x*SCALE,bottom:bean.y*SCALE})    
-            $el.addClass('n'+bean.n);
+        function SwitchSet(bean){
+
+            var $el = $('<div class="switchset">');
+            $el.css({left:bean.x*SCALE,bottom:bean.y*SCALE}) 
 
             this.$el = $el;
+            this.$els = {};
+
+            var $elDomeSwitch = $('<div class="switch">').appendTo(this.$el);
+            $elDomeSwitch.css({left:2*SCALE});
+
+            if( !bean.isDoor ){
+                var $elArtefact = $('<div class="artefact">').appendTo(this.$el);
+                $elArtefact.addClass(bean.content.type);
+                $elArtefact.addClass('nAll');
+                $elArtefact.css({left:2*SCALE-13,bottom:20})
+                var $elDome = $('<div class="switch-dome">').appendTo(this.$el);
+                $elDome.css({left:1*SCALE});
+            } else {
+                $elDomeSwitch.hide();
+            }
+
+            var iTick = 0;
+            this.claimed = false;
 
             this.update = function(bean){
-   
+                if(bean.cnt != this.cnt){
+                    this.cnt = bean.cnt;
+                    for(var i=0; i<this.cnt; i++){
+                        this.$els[i] = $('<div class="switch">').appendTo(this.$el);
+                        var x = -i*2;
+                        this.$els[i].css({left:x*SCALE})    
+                        this.$els[i].addClass('n'+i);
+                    }
+                }
+
+                for(var n in bean.switchMap){
+                    if(this.$els[n].hasClass('switched') != bean.switchMap[n]) this.$els[n].toggleClass('switched');
+                }
+
+                if(!bean.isDoor){
+                    iTick++;
+                    $elArtefact.removeClass('n0 n1 n2 n3 n4 n5 n6 n7 n8 n9');
+                    $elArtefact.addClass('n'+Math.floor(iTick/10)%9);
+                }
+
+                if(!bean.isDoor && bean.claimed != this.claimed){
+                    this.claimed = bean.claimed;
+                    $elDome.hide();
+                    $elArtefact.hide();
+                    if(!this.claimed){
+                        $elDome.show();
+                        $elArtefact.show();
+                    }
+                }
+                
             }
 
             this.update(bean);
@@ -348,14 +411,30 @@ define(['core/chat'], function(ChatBox) {
 
 
         var inventory = {};
-        function syncArtefactInventory(list){
+        function syncArtefactInventory(list,n){
+            for(var i in inventory) inventory[i].markForRemoval = true;
+
             for(var i in list){
                 var bean = list[i];
                 if(!inventory[bean.id]){
                     var $btn = $('<div class="inventory-button">').appendTo($elInventory);
-                    $btn.addClass('n'+bean.n);
+                    $btn.addClass('n'+n);
                     $btn.addClass(bean.content.type);
+                    $btn.data('bean',bean)
+                    $btn.click(function(e){
+
+                        onArtefact($(e.currentTarget).data('bean').content);
+                    })
                     inventory[bean.id] = $btn;
+                }
+
+                inventory[bean.id].markForRemoval = false;
+            }
+
+            for(var i in inventory){
+                if(inventory[i].markForRemoval){
+                    inventory[i].remove()
+                    delete inventory[i];
                 }
             }
         }
@@ -379,7 +458,6 @@ define(['core/chat'], function(ChatBox) {
 
                 if(isMe){
                     track(left,bottom);
-                    syncArtefactInventory(bean.claimed);
                 }
 
                 if(bean.n != this.n){

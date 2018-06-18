@@ -20,20 +20,26 @@ module.exports = function(room){
   }
 
   function onReset(){
-    console.log('onReset');
+    room.toAll('reset')
     for(var id in actors){
-      console.log(actors[id].type);
+      actors[id].reset();
+    }
+  }
+
+  function doGameVictory(){
+    room.toAll('victory');
+    theDoor.open();
+    for(var id in actors){
       if(actors[id].type == 'player'){
-        actors[id].reset();
-      } else if(actors[id].type == 'artefact'){
-        actors[id].revive();
-      } else if(actors[id].type == 'door'){
-        actors[id].isOpen = false;
+        actors[id].targetX = theDoor.x;
       }
     }
   }
 
+  function doChat(from){
 
+  }
+  
 
   function tick(){
     syncActors();
@@ -68,6 +74,8 @@ module.exports = function(room){
       } else if(actors[id].type == 'artefact'){
         actors[id].n = nArtefact%cntPlayer;
         nArtefact++;
+      } else if(actors[id].type == 'switchset'){
+        actors[id].revise(cntPlayer);
       }
     }
   }
@@ -93,8 +101,6 @@ module.exports = function(room){
         }
         actors[id].socket.emit('update',beans);
       }
-
-      
     }
   }
 
@@ -143,6 +149,11 @@ module.exports = function(room){
     idUnique++;
   }
 
+  function makeSwitchSet(x,y,content,isDoor){
+    actors[idUnique] = new SwitchSet(world,idUnique,x,y,content,isDoor);
+    idUnique++;
+  }
+
   function makeDoor(x,y,content){
     actors[idUnique] = theDoor = new Door(world,idUnique,x,y,content);
     idUnique++;
@@ -165,14 +176,14 @@ module.exports = function(room){
     var world = new b2d.World(gravity, doSleep);
 
     function DebugDraw(){
-      this.m_drawFlags = 1;
+      this.m_drawFlags = 1 | 2;
 
       /// Set the drawing flags.
       this.SetFlags = function(flags) { this.m_drawFlags = flags; };
 
       this.GetFlags = function() { return this.m_drawFlags; };
 
-      this.DrawPolygon = function(vertices, vertexCount, color) { room.toAll('DrawPolygon',vertices,vertexCount,color) };
+      this.DrawPolygon = function(vertices, vertexCount, color) { room.toAll('DrawSolidPolygon',vertices,vertexCount,color) };
 
       /// Draw a solid closed polygon provided in CCW order.
       this.DrawSolidPolygon = function(vertices, vertexCount, color) { room.toAll('DrawSolidPolygon',vertices,vertexCount,color) };
@@ -185,6 +196,8 @@ module.exports = function(room){
 
       /// Draw a line segment.
       this.DrawSegment = function(p1, p2, color) { };
+
+      this.DrawTransform = function(xf) { };
     }
 
     world.SetDebugDraw(new DebugDraw())
@@ -201,15 +214,15 @@ module.exports = function(room){
     listener.BeginContact = function(c){
       var a = c.GetFixtureA().GetBody().GetUserData();
       var b = c.GetFixtureB().GetBody().GetUserData();
-      if(a.touch) a.touch(b);
-      if(b.touch) b.touch(a);
+      if(a.touch) a.touch(b,c.GetFixtureB().GetUserData());
+      if(b.touch) b.touch(a,c.GetFixtureA().GetUserData());
     }
 
     listener.EndContact = function(c){
       var a = c.GetFixtureA().GetBody().GetUserData();
       var b = c.GetFixtureB().GetBody().GetUserData();
-      if(a.untouch) a.untouch(b);
-      if(b.untouch) b.untouch(a);
+      if(a.untouch) a.untouch(b,c.GetFixtureB().GetUserData());
+      if(b.untouch) b.untouch(a,c.GetFixtureA().GetUserData());
     }
       
     world.SetContactListener(listener);
@@ -305,6 +318,10 @@ module.exports = function(room){
     this.getBean = function(){
       return {type:this.type,id:this.id,x:this.x,y:this.y,w:this.w,h:this.h};
     }
+
+    this.reset = function(){
+      
+    }
   }
 
   function Artefact(world,id,n,x,y,content){
@@ -316,6 +333,7 @@ module.exports = function(room){
     this.id = id;
     this.n = n;
     this.type = 'artefact';
+    this.claimed = false;
 
     var d = new b2d.BodyDef();
     d.position.Set(this.x,this.y);
@@ -334,20 +352,109 @@ module.exports = function(room){
     }
 
     this.revive = function(){
-      console.log('revive');
       b.SetActive(true);
-      console.log(b.GetActive());
     }
 
     this.getBean = function(){
-      return {type:this.type,id:this.id,type:this.type,x:this.x,y:this.y,n:this.n,w:this.w,content:this.content};
+      return {claimed:this.claimed,type:this.type,id:this.id,type:this.type,x:this.x,y:this.y,n:this.n,w:this.w,content:this.content};
     }
+
+    this.reset = function(){
+      this.claimed = false;
+    }
+  }
+
+  function SwitchSet(world,id,x,y,content,isDoor){
+    //y is the floor
+
+    var widthPerSwitch = 1;
+    var spacingPerSwitch = 2;
+    this.w = 0;
+    this.h = 1;
+    this.x = x;
+    this.y = y+this.h/2;
+    this.content = content;
+    this.id = id;
+    this.type = 'switchset';
+    this.claimMap = {};
+    this.claimed = false;
+    this.switchMap = {};
+    this.isDoor = isDoor;
+
+    var d = new b2d.BodyDef();
+    d.position.Set(this.x,this.y);
+    d.type = 1;
+    var b = world.makeBody(d);
+    
+    for(var i=0; i<10; i++){
+      var s = new b2d.PolygonShape();
+      s.SetAsBox(widthPerSwitch/2,this.h/2,{x:-spacingPerSwitch*i,y:0},0);
+      var f = new b2d.FixtureDef(s);
+      f.shape = s;
+      f.isSensor = true;
+      f.userData = {n:i};
+      b.CreateFixture(f).SetUserData({n:i});
+    }
+
+    b.SetUserData(this);
+
+    this.die = function(){
+      //b.SetActive(false);
+    }
+
+    this.getBean = function(){
+      return {claimed:this.claimed,isDoor:this.isDoor,cnt:this.cnt,type:this.type,id:this.id,type:this.type,x:this.x,y:this.y,w:this.w,content:this.content,switchMap:this.switchMap};
+    }
+
+    this.getTargetForN = function(n){
+      return this.x - n*spacingPerSwitch
+    }
+
+    this.revise = function(cnt){
+      
+      if(cnt!=this.cnt){
+        this.cnt = cnt;
+        this.switchMap = {};
+        for(var i=0; i<this.cnt; i++) this.switchMap[i] = (this.claimMap[i] != undefined);
+      }
+    }
+
+    this.claim = function(other){
+      this.claimMap[other.n] = other;
+      this.switchMap[other.n] = true;
+
+      var cntClaimed = 0;
+      for(var i in this.claimMap) cntClaimed++;
+      if(cntClaimed == this.cnt){
+        if(isDoor){
+          room.toAll('door',content);
+        }
+        else if(!this.isOpen && !this.claimed){
+          this.claimed = true;
+          room.toAll('artefact',content);
+          room.toAll('chat-from-room','Clue revealed!',{});
+        }
+      }
+    }
+
+    this.unclaim = function(other){
+      this.switchMap[other.n] = false;
+      delete this.claimed[other.n];
+    }
+
+    this.reset = function(){
+      this.switchMap = {};
+      this.claimeMap = {};
+      this.claimed = false;
+    }
+
+    this.revise(1);
   }
 
   function Door(world,id,x,y,content){
     //y is the floor
 
-    this.w = 4;
+    this.w = 1;
     this.h = 4;
     this.x = x;
     this.y = y+this.h/2;
@@ -380,6 +487,10 @@ module.exports = function(room){
     this.open = function(){
       this.isOpen = true;
     }
+
+    this.reset = function(){
+      this.isOpen = false;
+    }
   }
 
   function Teacher(world,id,x,y){
@@ -392,7 +503,7 @@ module.exports = function(room){
     this.y = y;
 
     this.getBean = function(){
-      return {type:this.type,id:this.id,x:this.x,y:this.y,active:this.active};
+      return {type:this.type,id:this.id,x:this.x,y:this.y,active:this.active,n:this.type};
     }
 
     this.die = function(){
@@ -404,11 +515,23 @@ module.exports = function(room){
       if(this.targetY) this.y = (this.y*5+this.targetY)/6;
     }
 
+    this.onChatToRoom = function(msg){
+      room.toAll('chat-from-room',msg,actors[this.socket.id].getBean());
+    }
+
     this.socket.on('target',onTarget.bind(this));
+    this.socket.on('chat-to-room',this.onChatToRoom.bind(this));
 
     function onTarget(x,y){
       this.targetX = x;
       this.targetY = y;
+    }
+
+    this.reset = function(){
+      v.x = 0;
+      v.y = 0;
+      this.targetX = undefined;
+      this.targetY = undefined;
     }
   }
 
@@ -428,7 +551,6 @@ module.exports = function(room){
     this.body.SetUserData(this);
     this.new = true;
     this.n = n;
-    this.claimed = [];
 
     var v = this.body.GetLinearVelocity();
     var p = this.body.GetPosition();
@@ -486,7 +608,7 @@ module.exports = function(room){
     }
 
     this.getBean = function(){
-      return {type:'player',id:this.id,x:p.x,y:p.y,active:this.active,state:this.state,n:this.n,claimed:this.claimed};
+      return {type:'player',id:this.id,x:p.x,y:p.y,active:this.active,state:this.state,n:this.n};
     }
 
     this.onChatToRoom = function(msg){
@@ -515,38 +637,40 @@ module.exports = function(room){
 
     var platforms = [];
 
-    this.touch = function(other,c){
+    this.touch = function(other,otherFixture){
 
-      if(other.type == 'artefact' && other.n == this.n){
+      if(other.type == 'artefact' && other.n == this.n && !other.claimed){
         this.socket.emit('artefact',other.content);
         this.targetX = other.x;
-        this.claimed.push(other.getBean());
+        other.claimed = true;
         this.onChatToRoom('Clue discovered!');
-        other.markForRemoval = true;
       } else if(other.type == 'platform' && (other.y<p.y)){
         platforms[other.id] = other;
       } else if(other.type == 'player' && other.p.y<this.p.y){
         platforms[other.id] = other;
       } else if(other.type == 'door'){
         //this.die();
-        this.socket.emit('door',other.content);
-        this.targetX = other.x;
+        //this.socket.emit('door',other.content);
+        //this.targetX = other.x;
+      } else if(other.type == 'switchset' && otherFixture.n == this.n){
+        other.claim(this);
+        this.targetX = other.getTargetForN(this.n)
       }
     }
 
-    this.untouch = function(other,c){
+    this.untouch = function(other,otherFixture){
       if(other.type == 'platform'){
         delete platforms[other.id];
       } else if (other.type == 'player' && platforms[other.id]){
         delete platforms[other.id];
+      } else if(other.type == 'switchset' && otherFixture.n == this.n){
+        other.unclaim(this);
       }
     }
 
     this.onAttempt = function(isCorrect){
       if(isCorrect){
-        this.onChatToRoom('Puzzle solved!');
-        room.toAll('victory');
-        theDoor.open();
+        doGameVictory();
       }
     }
 
@@ -572,7 +696,7 @@ module.exports = function(room){
   makePlatform(75,12,10); 
 
   // put these at the same coordinates as the platforms to make them float in the middle of said platform
-  makeArtefact(5,6,{type:'video',html:"<video width=720 height=480 autoplay controls src='./content/pizza-anim.mp4'></video>"});
+  makeSwitchSet(19,0,{type:'video',html:"<video width=720 height=480 autoplay controls src='./content/pizza-anim.mp4'></video>"});
   makeArtefact(15,12,{type:'scrap',html:"<img src='./content/pizza-menu.png'>"});
   makeArtefact(25,18,{type:'scrap',html:"<img src='./content/pizza-menu-bottom.png'>"});
   makeArtefact(25,26,{type:'tool',subtype:"measuring",img:'./content/pizza-small.png',width:9});
@@ -582,6 +706,7 @@ module.exports = function(room){
   makeArtefact(65,20,{type:'book',html:"<img src='./content/little-book-of-circles.png'>"});
   makeArtefact(75,12,{type:'tool',html:'<iframe width="219" height="302" src="http://www.calculator-1.com/outdoor/?f=ffffff&r=ffffff" scrolling="no" frameborder="0"></iframe>'});
 
+  makeSwitchSet(86,0,[{type:'input',target:1},'&nbsp;Small Pizzas<br>',{type:'input',target:0},'&nbsp;Medium Pizzas<br>',{type:'input',target:2},'&nbsp;Large Pizzas<br>'],true)
   makeDoor(90,0,[{type:'input',target:1},'&nbsp;Small Pizzas<br>',{type:'input',target:0},'&nbsp;Medium Pizzas<br>',{type:'input',target:2},'&nbsp;Large Pizzas<br>'])
 
   makeHint('There is only one flavour of pizza.');

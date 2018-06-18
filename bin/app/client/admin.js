@@ -10,7 +10,6 @@ define([], function() {
 		}
 
 		function onUsers(users){
-			console.log('users',users);
 			$('.user-list').empty();
 			for(id of users){
 				var $user = $('<div class="user">').appendTo('.user-list').html(id);

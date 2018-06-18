@@ -8,6 +8,7 @@ body{
 	text-align: center;
 	background: gray;
 	background: url('./img/bg.png');
+	user-select: none;
 }
 
 button{

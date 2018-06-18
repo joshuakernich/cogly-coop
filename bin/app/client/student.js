@@ -1,6 +1,6 @@
 define([], function() {
     
-    return function App(){
+    return function App(isTeacher){
     	var socket = io();
     	socket.on('room',onRoom);
 
@@ -16,7 +16,7 @@ define([], function() {
 			$('.input-panel button').text('Jumping in...');
 			$('.input-panel input').attr('disabled','disabled');
 			var code = $('.input-panel input').val();
-			socket.emit('code',code,false);
+			socket.emit('code',code,isTeacher);
 		}
 
 		function onRoom(room){

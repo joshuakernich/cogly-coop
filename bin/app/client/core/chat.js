@@ -6,7 +6,7 @@ define(["./html2canvas"], function(html2canvas) {
         var $elChatBox = $('<div class="chat-box">').appendTo(this.$el);
     	$elChatBox.append("Chat<br>");
     	
-    	var $elStream = $('<div>').appendTo($elChatBox);
+    	var $elStream = $('<div class="chat-stream">').appendTo($elChatBox);
         
         var $elInputBox = $('<div class="chat-input">').appendTo($elChatBox);
         var $elInput = $('<input>').appendTo($elInputBox);
@@ -24,6 +24,10 @@ define(["./html2canvas"], function(html2canvas) {
             {type:'confused'},
         ]
 
+        function reset(){
+            $elStream.empty();
+        }
+
     	function add(message,origin,offset){
     		var $elMsg = $('<div class= "chat-message">').html(message);
             var $elEmote = $('<div class="chat-emote">').appendTo($elMsg);
@@ -37,9 +41,15 @@ define(["./html2canvas"], function(html2canvas) {
             if(origin.id == socket.id) $elMsg.addClass('isMe');
     		$elMsg.appendTo($elStream);
 
-            offset.top -= 40;
+            offset.top -= $elMsg.outerHeight()+5;
             offset.left -= 80;
-            $elMsg.offset(offset).delay(800).animate({left:0,top:0});
+
+            $elClone = $elMsg.clone().appendTo($elStream).css('position','fixed');
+            $elMsg.css('opacity',0);
+            $elClone.offset(offset).delay(800).animate($elMsg.offset(),function(){
+                $elClone.remove();
+                $elMsg.css('opacity',1);
+            });
     	}
 
     	function onKey(e){
@@ -90,8 +100,8 @@ define(["./html2canvas"], function(html2canvas) {
 
             function onScreenshotReady(canvas){
 
-                var wMax = 250;
-                var hMax = 250;
+                var wMax = 200;
+                var hMax = 200;
 
                 var ratio = Math.min(wMax/canvas.width,hMax/canvas.height);
                 
@@ -116,7 +126,7 @@ define(["./html2canvas"], function(html2canvas) {
         }
 
         this.add = add;
-
+        this.reset = reset;
         
     	
     }

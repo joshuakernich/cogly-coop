@@ -168,6 +168,18 @@
 	background-position: 0px 0px;
 }
 
+.platformer .door.open:before{
+	content: "VICTORY!";
+	position: absolute;
+	bottom: 100px;
+	left: -50px;
+	width: 200px;
+	text-align: center;
+	color: white;
+	font-family: Impact;
+	text-shadow: 0px 0px 1px black, 0px 1px black;
+}
+
 .platformer .door.open:after{
 	content: "";
 	animation: door-open-sprite 1s steps(6);
@@ -248,8 +260,53 @@
 	text-shadow: 0px 1px rgba(255,255,255,0.5);
 }
 
+.platformer .switchset{
+	position: absolute;
+}
+
 .platformer .switch{
 	position: absolute;	
+	top: 13px;
+}
+
+.platformer .switch-dome{
+	position: absolute;
+	bottom: 0px;
+}
+
+.platformer .switch-dome:after{
+	content: "";
+	position: absolute;
+	left: 3px;
+	width: 44px;
+	height: 50px;
+	bottom: -12px;
+	border-top-left-radius: 20px;
+	border-top-right-radius: 20px;
+	background: rgba(255,255,255,0.3);
+	border: 1px solid black;
+	border-bottom: none;
+}
+
+
+
+.platformer .switch:before{
+	content: "";
+	position: absolute;
+	width: 20px;
+	height: 25px;
+	border-radius: 20px;
+	border-top-left-radius: 0px;
+	border-top-right-radius: 0px;
+	border: 2px solid black;
+	border-top: 0px;
+	left: 10px;
+	top: 2px;
+
+}
+
+.platformer .switch:first-of-type:before{
+	display: none;
 }
 
 .platformer .switch:after{
@@ -259,7 +316,7 @@
 	height: 60px;
 	left: -25px;
 	bottom: -23px;
-	background-image: url('./img/switch0001.png');
+	background-image: url('./img/switch0000.png');
 }
 
 .platformer .switch.n0:after{ background-image: url('./img/switch0001.png'); }
@@ -271,6 +328,10 @@
 .platformer .switch.n6:after{ background-image: url('./img/switch0007.png'); }
 .platformer .switch.n7:after{ background-image: url('./img/switch0008.png'); }
 .platformer .switch.n8:after{ background-image: url('./img/switch0009.png'); }
+
+.platformer .switch.switched:after{
+	background-position: -50px 0px;
+}
 
 
 .platformer .artefact{
