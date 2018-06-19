@@ -172,11 +172,12 @@
 	content: "VICTORY!";
 	position: absolute;
 	bottom: 100px;
-	left: -50px;
+	left: -100px;
 	width: 200px;
 	text-align: center;
 	color: white;
 	font-family: Impact;
+	font-size: 50px;
 	text-shadow: 0px 0px 1px black, 0px 1px black;
 }
 

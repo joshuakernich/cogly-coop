@@ -7,7 +7,7 @@ body{
 	font-size: 20px;
 	text-align: center;
 	background: gray;
-	background: url('./img/bg.png');
+	background: url('./img/bg.jpg');
 	user-select: none;
 }
 

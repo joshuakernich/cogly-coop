@@ -1,27 +1,42 @@
-<!DOCTYPE html>
 <html>
-<head>
-	<title>coop.cogly.co</title>
-	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
-	<script type="text/javascript" src="./lib/jquery-3.3.1.min.js"></script>
-	<script type="text/javascript" src="./lib/require.js"></script>
-	<script type="text/javascript">
+  <head>
+    <style type="text/css">
 
-		$(document).ready(init)
+      .logo{
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 90px;
+        height: 110px;
+        background: url('./img/logo.png');
+        background-size: 90px;
+      }
 
-		function init(){
-			var isTeacher = window.location.search.indexOf('teacher') > -1
-			requirejs(["student"], function(App) {
-				var app = new App(isTeacher);
-			});
-		}
+      .info{
+        background: rgba(255,255,255,0.9);
+        padding: 30px;
+        display: inline-block;
+      }
 
-	</script>
-	<link rel="stylesheet" type="text/css" href="./index.css"></head>
-	<link rel="stylesheet" type="text/css" href="./core/chat.css"></head>
-</head>
-<body>
-<div class='game'></div>
-<div class='input-panel'>What is your Cogly code?<input value='1234'><button>Go</button></div>
-</body>
+      .character{
+        width: 64px;
+        height: 110px;
+        background-image: url('./games/platformer/img/character0001.png');
+        background-size: 400%;
+        image-rendering: pixelated;
+      }
+
+    </style>
+    <link rel="stylesheet" type="text/css" href="./index.css"></head>
+  </head>
+  <body>
+    <div class='logo'></div>
+    <div class='info'>
+      <h1>Welcome Matt!</h1>
+      <div class='character'></div>
+      <button>Customize</button>
+      <button>Jump In</button>
+
+    </div>
+  </body>
 </html>

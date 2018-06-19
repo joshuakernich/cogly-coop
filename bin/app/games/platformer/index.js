@@ -90,15 +90,8 @@ module.exports = function(room){
 
     //update all the sockets
     for(var id in actors){
-
       if(actors[id].socket){
-        if(actors[id].new){
         actors[id].new = false;
-        setTimeout(function(){
-          actors[id].socket.emit('static-list',world.getStaticBeans());
-          actors[id].socket.emit('hint-list',hints);
-          },500);
-        }
         actors[id].socket.emit('update',beans);
       }
     }
@@ -140,7 +133,7 @@ module.exports = function(room){
   }
 
   function makePlatform(x,y,w){
-    statics[idUnique] = new Platform(world,idUnique,x,y,w);
+    actors[idUnique] = new Platform(world,idUnique,x,y,w);
     idUnique++;
   }
 
@@ -429,7 +422,7 @@ module.exports = function(room){
         if(isDoor){
           room.toAll('door',content);
         }
-        else if(!this.isOpen && !this.claimed){
+        else if(!this.claimed){
           this.claimed = true;
           room.toAll('artefact',content);
           room.toAll('chat-from-room','Clue revealed!',{});

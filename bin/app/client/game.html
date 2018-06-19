@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>coop.cogly.co</title>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="./lib/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="./lib/require.js"></script>
+	<script type="text/javascript">
+
+		$(document).ready(init)
+
+		function init(){
+			var isTeacher = window.location.search.indexOf('teacher') > -1
+			requirejs(["student"], function(App) {
+				var app = new App(isTeacher);
+			});
+		}
+
+	</script>
+	<link rel="stylesheet" type="text/css" href="./index.css"></head>
+	<link rel="stylesheet" type="text/css" href="./core/chat.css"></head>
+</head>
+<body>
+<div class='game'></div>
+<div class='input-panel'>What is your Cogly code?<input value='1234'><button>Go</button></div>
+</body>
+</html>

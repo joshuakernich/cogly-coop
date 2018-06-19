@@ -99,11 +99,12 @@ define(['core/chat'], function(ChatBox) {
 
         function onReset(){
             chatBox.reset();
+            $elEnding.hide();
         }
 
         function onVictory(){
             $elEnding.show();
-            $elEnding.append('<div class="ending-victory">VICTORY</div>');
+            //$elEnding.append('<div class="ending-victory">VICTORY</div>');
         }
 
         function onChatFromRoom(msg,origin){
@@ -206,16 +207,20 @@ define(['core/chat'], function(ChatBox) {
     		}
     	}
 
-        function drawPlatform(def){
+        function Platform(def){
             var $el = $('<div class="platform">').appendTo($elBG);
             $el.css({
                 left:(def.x-def.w/2)*SCALE,
                 bottom:def.y*SCALE -23,
                 width:(def.w)*SCALE
             });
+
+            this.update = function(){
+
+            }
         }
 
-    	function drawBox(def){
+    	function Box(def){
     		var $el = $('<div class="box">').appendTo($elWorld);
     		$el.css({
     			left:(def.x-def.w/2)*SCALE,
@@ -223,6 +228,10 @@ define(['core/chat'], function(ChatBox) {
     			width:(def.w)*SCALE,
     			height:(def.h)*SCALE
     		});
+
+            this.update = function(){
+
+            }
     	}
 
     	function onUpdate(list){
@@ -252,6 +261,10 @@ define(['core/chat'], function(ChatBox) {
                     } else if(list[id].type == 'switchset'){
                         dynamics[id] = new SwitchSet(list[id]);
                         $elMG.append(dynamics[id].$el);
+                    } else if(list[id].type == 'box'){
+                        dynamics[id] = new Box(list[id]);
+                    } else if(list[id].type == 'platform'){
+                        dynamics[id] = new Platform(list[id]);
                     }
     			}
 
@@ -322,9 +335,10 @@ define(['core/chat'], function(ChatBox) {
             this.$el = $el;
 
             this.update = function(bean){
-                if(bean.isOpen && !isOpen){
+                if(bean.isOpen != isOpen){
                     isOpen = bean.isOpen;
                     this.$el.addClass('open');
+                    if(!isOpen) this.$el.removeClass('open');
                 }
             }
 
