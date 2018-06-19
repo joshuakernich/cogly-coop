@@ -1,9 +1,10 @@
 .chat-layer{
-	position: absolute;
+	position: fixed;
 	top: 0px;
 	left: 0px;
 	right: 0px;
 	bottom: 0px;
+	z-index: 1;
 }
 
 .chat-layer.untouchable *{
@@ -115,7 +116,8 @@
 
 .chat-box .chat-stream{
 	max-height: 300px;
-	overflow: scroll;
+	overflow-x: none;
+	overflow-y: scroll;
 }
 
 .chat-box .chat-message{
