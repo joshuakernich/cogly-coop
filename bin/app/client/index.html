@@ -19,23 +19,82 @@
       }
 
       .character{
-        width: 64px;
-        height: 110px;
+        width: 32px;
+        height: 55px;
         background-image: url('./games/platformer/img/character0001.png');
         background-size: 400%;
         image-rendering: pixelated;
+        margin: auto;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .character:nth-of-type(1){
+        background-image: url('./games/platformer/img/character0001.png');
+      }
+
+      .character:nth-of-type(2){
+        background-image: url('./games/platformer/img/character0002.png');
+      }
+
+      .character:nth-of-type(3){
+        background-image: url('./games/platformer/img/character0003.png');
+      }
+
+      .character:nth-of-type(4){
+        background-image: url('./games/platformer/img/character0004.png');
+      }
+
+      .character:nth-of-type(5){
+        background-image: url('./games/platformer/img/character0005.png');
+      }
+
+      .character.me{
+        width: 64px;
+        height: 110px;
+      }
+
+      button{
+        border: none;
+        border-bottom: 1px solid rgba(0,0,0,0.2);
+        border-radius: 5px;
+        width: 100%;
+        background: #59D3A7;
+        margin-top: 10px;
+        text-shadow: 0px 1px rgba(255,255,255,0.5);
+      }
+
+      .jump-in{
+        background: #5CBBEE;
       }
 
     </style>
     <link rel="stylesheet" type="text/css" href="./index.css"></head>
+    <script type="text/javascript" src="./lib/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(init)
+
+      function init(){
+        $('.jump-in').click(function(){
+          window.location = './game.html';
+        })
+      }
+      
+    </script>
   </head>
   <body>
     <div class='logo'></div>
     <div class='info'>
       <h1>Welcome Matt!</h1>
+      <div class='party'>
       <div class='character'></div>
+      <div class='character me'></div>
+      <div class='character'></div>
+      <div class='character'></div>
+      <div class='character'></div>
+      </div>
       <button>Customize</button>
-      <button>Jump In</button>
+      <button class='jump-in'>Jump In</button>
 
     </div>
   </body>

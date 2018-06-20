@@ -4,6 +4,8 @@ define(['core/chat'], function(ChatBox) {
 
         var me = undefined;
     	var SCALE = 25;
+        var doEnding = false;
+        var didEnding = false;
 
     	$el.addClass('platformer');
 
@@ -31,7 +33,8 @@ define(['core/chat'], function(ChatBox) {
         var $elPopupClose = $('<div class="popup-close-button">').appendTo($elPopupContentPanel);
         $elPopupClose.on('mousedown',onClosePopup.bind(this));
 
-        var $elHints = $('<div class="hint-panel">').appendTo($elUX);
+        var $elCoins = $('<div class="coin-inventory"><div class="chest"></div><div class="coin"></div></div>').appendTo($elUX);
+        var $elCoinCount = $('<div class="coin-count">').appendTo($elCoins);
     	var $elInventory = $('<div class="inventory-panel">').appendTo($elUX);
 
         var chatBox = new ChatBox(socket);
@@ -86,11 +89,9 @@ define(['core/chat'], function(ChatBox) {
     	var dynamics = {};
 
         socket.on('static-list',onStaticList);
-        socket.on('hint-list',onHintList);
         socket.on('update',onUpdate);
         socket.on('artefact',onArtefact);
         socket.on('door',onDoor);
-    	socket.on('hints',onHintList);
         socket.on('chat-from-room',onChatFromRoom);
         socket.on('victory',onVictory);
         socket.on('reset',onReset);
@@ -98,12 +99,16 @@ define(['core/chat'], function(ChatBox) {
         $elPopup.hide();
 
         function onReset(){
+            doEnding = didEnding = false;
             chatBox.reset();
             $elEnding.hide();
         }
 
         function onVictory(){
-            $elEnding.show();
+            
+
+            //doEnding = true;
+
             //$elEnding.append('<div class="ending-victory">VICTORY</div>');
         }
 
@@ -117,9 +122,6 @@ define(['core/chat'], function(ChatBox) {
             chatBox.add(msg,origin,o);
         }
 
-        function onHintList(list){
-            
-        }
 
         function onArtefact(content){
             $elPopupContent.empty();
@@ -265,21 +267,71 @@ define(['core/chat'], function(ChatBox) {
                         dynamics[id] = new Box(list[id]);
                     } else if(list[id].type == 'platform'){
                         dynamics[id] = new Platform(list[id]);
+                    } else if(list[id].type == 'coin'){
+                        dynamics[id] = new Coin(list[id]);
+                        $elMG.append(dynamics[id].$el);
                     }
     			}
 
                 if(id == socket.id) var me = dynamics[id]
-  
+
+                if(list[id].type=='switchset' && list[id].isDoor && list[id].claimed) doEnding = true;
+
                 dynamics[id].update(list[id]);
     			dynamics[id].markForRemoval = false;
     		}
 
+            if(doEnding && !didEnding){
+                $elEnding.show();
+                $elPopup.hide();
+
+                var coinCount = 0;
+                var theDoor;
+                for(var id in list){
+                    if(list[id].type=='switchset' && list[id].isDoor) theDoor = dynamics[id];
+                    if(list[id].type=='coin') coinCount++;
+                }
+
+                for(var id in list){
+                    if(list[id].type == 'player'){
+                        for(var i=0; i<coinCount; i++){
+                            var $elCoin = $('<div class="coin">').appendTo($elEnding);
+                            var oDoor = theDoor.$el.find('.chest').offset();
+                            var oPlayer = dynamics[id].$el.offset();
+                            $elCoin.offset(oPlayer)
+                            var oPlayer = $elCoin.position();
+                            oPlayer.left += 15;
+                            oPlayer.top += 20;
+
+                            $elCoin.offset({left:oDoor.left+20,top:oDoor.top+20})
+                            .css({opacity:0})
+                            .delay(i*100)
+                            .animate({opacity:1},10)
+                            .animate({top:oPlayer.top-50})
+                            .animate({left:oPlayer.left,top:oPlayer.top-50})
+                            .animate({left:oPlayer.left,top:oPlayer.top})
+                            .animate({opacity:0},10)
+                        }
+                        
+                    }
+                }
+
+                didEnding = true;
+            }
+
             var inventory = []
+            var coins = 20;
             for(var id in list){
                 if(list[id].claimed && (list[id].type == 'switchset' || list[id].n == me.n)){
                     inventory.push(list[id])
                 }
+
+                if(list[id].claimed && list[id].type == 'coin'){
+                    coins++;
+                }
             }
+
+            $elCoinCount.html(coins);
 
             syncArtefactInventory(inventory,me.n)
 
@@ -290,6 +342,27 @@ define(['core/chat'], function(ChatBox) {
                 }
             }
     	}
+
+        function Coin(bean){
+            this.claimed = false;
+
+            var $el = $('<div class="coin">');
+            $el.css({
+                left:(bean.x)*SCALE,
+                bottom:(bean.y)*SCALE,
+                'animation-delay':'-'+(Math.random()*2)+'s'
+            })
+
+            this.$el = $el;
+
+            this.update = function(bean){
+                if(this.claimed != bean.claimed){
+                    this.claimed = bean.claimed;
+                    $el.hide();
+                    if(!this.claimed) $el.show();
+                }
+            }
+        }
 
         function Artefact(bean){
             this.n = bean.n;
@@ -305,6 +378,8 @@ define(['core/chat'], function(ChatBox) {
                 height:(bean.w)*SCALE,
                 'animation-delay':'-'+(Math.random()*2)+'s'
             })
+
+
 
             this.$el = $el;
 
@@ -354,6 +429,7 @@ define(['core/chat'], function(ChatBox) {
 
             this.$el = $el;
             this.$els = {};
+            this.isDoor = bean.isDoor;
 
             var $elDomeSwitch = $('<div class="switch">').appendTo(this.$el);
             $elDomeSwitch.css({left:2*SCALE});
@@ -366,7 +442,10 @@ define(['core/chat'], function(ChatBox) {
                 var $elDome = $('<div class="switch-dome">').appendTo(this.$el);
                 $elDome.css({left:1*SCALE});
             } else {
-                $elDomeSwitch.hide();
+                var $elChest = $('<div class="chest">').appendTo(this.$el);
+                $elChest.css({left:25,bottom:-15})
+                var $elDome = $('<div class="switch-dome">').appendTo(this.$el);
+                $elDome.css({left:1*SCALE});
             }
 
             var iTick = 0;
@@ -375,6 +454,13 @@ define(['core/chat'], function(ChatBox) {
             this.update = function(bean){
                 if(bean.cnt != this.cnt){
                     this.cnt = bean.cnt;
+
+                    for(var i=0; i<this.$els.length; i++){
+                        this.$els[i].remove();
+                    }
+
+                    this.$els.length = 0;
+
                     for(var i=0; i<this.cnt; i++){
                         this.$els[i] = $('<div class="switch">').appendTo(this.$el);
                         var x = -i*2;
@@ -393,14 +479,16 @@ define(['core/chat'], function(ChatBox) {
                     $elArtefact.addClass('n'+Math.floor(iTick/10)%9);
                 }
 
-                if(!bean.isDoor && bean.claimed != this.claimed){
+                if(this.open != bean.open){
+                    this.open = bean.open;
+                    $el.addClass('open');
+                    if(!this.open) $el.removeClass('open')
+                }
+
+                if(bean.claimed != this.claimed){
                     this.claimed = bean.claimed;
-                    $elDome.hide();
-                    $elArtefact.hide();
-                    if(!this.claimed){
-                        $elDome.show();
-                        $elArtefact.show();
-                    }
+                    $el.addClass('claimed');
+                    if(!this.claimed) $el.removeClass('claimed');
                 }
                 
             }
@@ -414,8 +502,8 @@ define(['core/chat'], function(ChatBox) {
 
         function track(left,bottom){
             //track me
-            var w = $el.width();
-            var h = $el.height();
+            var w = $elView.width();
+            var h = $elView.height();
             var wWorld = $elWorld.width();
             var hWorld = $elWorld.height();
             var scrollLeft = Math.min(100,Math.max(-(wWorld-w)-100,-left+w/2));

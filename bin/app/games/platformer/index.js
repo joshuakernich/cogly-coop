@@ -28,10 +28,10 @@ module.exports = function(room){
 
   function doGameVictory(){
     room.toAll('victory');
-    theDoor.open();
+    theDoor.claimed = true;
     for(var id in actors){
       if(actors[id].type == 'player'){
-        actors[id].targetX = theDoor.x;
+        
       }
     }
   }
@@ -144,11 +144,17 @@ module.exports = function(room){
 
   function makeSwitchSet(x,y,content,isDoor){
     actors[idUnique] = new SwitchSet(world,idUnique,x,y,content,isDoor);
+    if(isDoor) theDoor = actors[idUnique]
     idUnique++;
   }
 
   function makeDoor(x,y,content){
     actors[idUnique] = theDoor = new Door(world,idUnique,x,y,content);
+    idUnique++;
+  }
+
+  function makeCoin(x,y){
+    actors[idUnique] = new Coin(world,idUnique,x,y);
     idUnique++;
   }
 
@@ -357,6 +363,36 @@ module.exports = function(room){
     }
   }
 
+  function Coin(world,id,x,y,content){
+    //y is the floor
+    this.x = x;
+    this.y = y;
+    this.w = 1;
+    this.content = content;
+    this.id = id;
+    this.type = 'coin';
+    this.claimed = false;
+
+    var d = new b2d.BodyDef();
+    d.position.Set(this.x,this.y);
+    d.type = 1;
+    var b = world.makeBody(d);
+    var s = new b2d.CircleShape(0.5);
+    var f = new b2d.FixtureDef(s);
+    f.shape = s;
+    f.isSensor = true;
+    b.CreateFixture(f);
+    b.SetUserData(this);
+
+    this.getBean = function(){
+      return {claimed:this.claimed,type:this.type,id:this.id,type:this.type,x:this.x,y:this.y,w:this.w,content:this.content};
+    }
+
+    this.reset = function(){
+      this.claimed = false;
+    }
+  }
+
   function SwitchSet(world,id,x,y,content,isDoor){
     //y is the floor
 
@@ -371,6 +407,7 @@ module.exports = function(room){
     this.type = 'switchset';
     this.claimMap = {};
     this.claimed = false;
+    this.open = false;
     this.switchMap = {};
     this.isDoor = isDoor;
 
@@ -396,7 +433,7 @@ module.exports = function(room){
     }
 
     this.getBean = function(){
-      return {claimed:this.claimed,isDoor:this.isDoor,cnt:this.cnt,type:this.type,id:this.id,type:this.type,x:this.x,y:this.y,w:this.w,content:this.content,switchMap:this.switchMap};
+      return {victory:this.victory,open:this.open,claimed:this.claimed,isDoor:this.isDoor,cnt:this.cnt,type:this.type,id:this.id,type:this.type,x:this.x,y:this.y,w:this.w,content:this.content,switchMap:this.switchMap};
     }
 
     this.getTargetForN = function(n){
@@ -413,12 +450,13 @@ module.exports = function(room){
     }
 
     this.claim = function(other){
-      this.claimMap[other.n] = other;
+
       this.switchMap[other.n] = true;
 
       var cntClaimed = 0;
-      for(var i in this.claimMap) cntClaimed++;
+      for(var i in this.switchMap) if(this.switchMap[i]) cntClaimed++;
       if(cntClaimed == this.cnt){
+        this.open = true;
         if(isDoor){
           room.toAll('door',content);
         }
@@ -432,13 +470,13 @@ module.exports = function(room){
 
     this.unclaim = function(other){
       this.switchMap[other.n] = false;
-      delete this.claimed[other.n];
+      this.open = false;
     }
 
     this.reset = function(){
       this.switchMap = {};
-      this.claimeMap = {};
       this.claimed = false;
+      this.open = false;
     }
 
     this.revise(1);
@@ -608,6 +646,16 @@ module.exports = function(room){
       room.toAll('chat-from-room',msg,actors[this.socket.id].getBean());
     }
 
+    var iHint = 0;
+    this.onHintRequest = function(){
+      room.toAll('chat-from-room','Hint Requested',actors[this.socket.id].getBean());
+      setTimeout(function(){
+        room.toAll('chat-from-room',hints[iHint%hints.length],{});
+        iHint++;
+      },1000)
+      
+    }
+
     this.onJump = function(){
       var cnt = 0;
       for(var p in platforms) cnt++;
@@ -648,6 +696,8 @@ module.exports = function(room){
       } else if(other.type == 'switchset' && otherFixture.n == this.n){
         other.claim(this);
         this.targetX = other.getTargetForN(this.n)
+      } else if(other.type == 'coin'){
+        other.claimed = true;
       }
     }
 
@@ -672,13 +722,14 @@ module.exports = function(room){
     this.socket.on('chat-to-room',this.onChatToRoom.bind(this));
     this.socket.on('attempt',this.onAttempt.bind(this));
     this.socket.on('reset',onReset.bind(this));
+    this.socket.on('hint-request',this.onHintRequest.bind(this));
   }
 
   var W = 100;
   var H = 30;
 
   makePlatform(W/2,0,W); 
-  makePlatform(5,6,10); 
+  makePlatform(10,6,20); 
   makePlatform(15,12,10); 
   makePlatform(25,18,10); 
   makePlatform(25,26,10); 
@@ -689,7 +740,7 @@ module.exports = function(room){
   makePlatform(75,12,10); 
 
   // put these at the same coordinates as the platforms to make them float in the middle of said platform
-  makeSwitchSet(19,0,{type:'video',html:"<video width=720 height=480 autoplay controls src='./content/pizza-anim.mp4'></video>"});
+  makeSwitchSet(10,6,{type:'video',html:"<video width=720 height=480 autoplay controls src='./content/pizza-anim.mp4'></video>"});
   makeArtefact(15,12,{type:'scrap',html:"<img src='./content/pizza-menu.png'>"});
   makeArtefact(25,18,{type:'scrap',html:"<img src='./content/pizza-menu-bottom.png'>"});
   makeArtefact(25,26,{type:'tool',subtype:"measuring",img:'./content/pizza-small.png',width:9});
@@ -700,7 +751,24 @@ module.exports = function(room){
   makeArtefact(75,12,{type:'tool',html:'<iframe width="219" height="302" src="http://www.calculator-1.com/outdoor/?f=ffffff&r=ffffff" scrolling="no" frameborder="0"></iframe>'});
 
   makeSwitchSet(86,0,[{type:'input',target:1},'&nbsp;Small Pizzas<br>',{type:'input',target:0},'&nbsp;Medium Pizzas<br>',{type:'input',target:2},'&nbsp;Large Pizzas<br>'],true)
-  makeDoor(90,0,[{type:'input',target:1},'&nbsp;Small Pizzas<br>',{type:'input',target:0},'&nbsp;Medium Pizzas<br>',{type:'input',target:2},'&nbsp;Large Pizzas<br>'])
+  //makeDoor(90,0,[{type:'input',target:1},'&nbsp;Small Pizzas<br>',{type:'input',target:0},'&nbsp;Medium Pizzas<br>',{type:'input',target:2},'&nbsp;Large Pizzas<br>'])
+
+  makeCoin(27,10);
+  makeCoin(29,10);
+  makeCoin(31,10);
+  makeCoin(33,10);
+
+  makeCoin(28,12);
+  makeCoin(30,12);
+  makeCoin(32,12);
+
+  makeCoin(6,22);
+  makeCoin(8,22);
+  makeCoin(10,22);
+
+  makeCoin(46,22);
+  makeCoin(48,22);
+  makeCoin(50,22);
 
   makeHint('There is only one flavour of pizza.');
   makeHint('You should try and buy as much pizza as you can with your money.');

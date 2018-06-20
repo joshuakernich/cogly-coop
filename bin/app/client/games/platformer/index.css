@@ -38,6 +38,15 @@
 	}
 }
 
+@keyframes coin-sprite {
+	0%{
+		background-position: 0px;
+	}
+	100%{
+		background-position: -132px;
+	}
+}
+
 @keyframes shrink-to-nothing {
 	0%{
 		transform: scale(1);
@@ -62,7 +71,7 @@
 .platformer .layer{
 	position: absolute;
 	top: 0px;
-	left: 0px;
+	left: 300px;
 	bottom: 0px;
 	right: 0px;
 }
@@ -76,11 +85,12 @@
 }
 
 .platformer .layer.victory-screen{
-	background: rgba(255,150,0,0.2);
+	
 	font-size: 200px;
 	color: white;
 	font-family: impact;
 	text-shadow: 0px 5px black, 0px 0px 1px black; 
+	display: none;
 }
 
 .platformer .hint-panel{
@@ -92,7 +102,7 @@
 
 .platformer .inventory-panel{
 	position: absolute;
-	top: 0px;
+	top:50px;
 	right: 0px;
 	padding: 10px;
 }
@@ -287,9 +297,38 @@
 	background: rgba(255,255,255,0.3);
 	border: 1px solid black;
 	border-bottom: none;
+	transition: bottom 0.2s;
 }
 
+.platformer .switchset.open .switch-dome:after{
+	bottom: 50px;
+	border-bottom: 1px solid black;
+}
 
+.platformer .switchset.claimed .switch-dome{
+	display: none;
+}
+
+.platformer .switchset.claimed .artefact{
+	display: none;
+}
+
+.platformer .switchset.claimed .chest{
+	background-position: -50px;
+}
+
+.platformer .switchset.claimed .chest:after{
+	content: "VICTORY!";
+	position: absolute;
+	bottom: 50px;
+	left: -75px;
+	width: 200px;
+	text-align: center;
+	color: #ffdd00;
+	font-family: Impact;
+	font-size: 50px;
+	text-shadow: 0px 0px 1px black, 0px 1px black;
+}
 
 .platformer .switch:before{
 	content: "";
@@ -372,7 +411,7 @@
 	position: absolute;
 	background: rgba(200,200,200,0.8);
 	top: 0px;
-	left: 0px;
+	left: 300px;
 	right: 0px;
 	bottom: 0px;
 	white-space: nowrap;
@@ -522,7 +561,7 @@
 	width: 55px;
 	background: none;
 	cursor: pointer;
-	z-index: 1;
+	z-index: 2;
 	outline: none;
 }
 
@@ -533,3 +572,76 @@
 .platformer .reset-button:after{
 	content: "RESET";
 }
+
+.platformer .coin{
+	position: absolute;
+}
+
+.platformer .coin:after{
+	content: "";
+	position: absolute;
+	width: 22px;
+	height: 22px;
+	left: -11px;
+	top: -11px;
+	background-image: url('./img/coin-sprite.png');
+	animation: coin-sprite 1s steps(6) infinite;
+	animation-delay: inherit;
+}
+
+.platformer .chest{
+	position: absolute;
+	width: 50px;
+	height: 50px;
+	background: url('./img/chest-sprite.png');
+}
+
+.platformer .coin-inventory{
+	position: absolute;
+	top:10px;
+	right:65px;
+	height: 40px;
+	text-shadow: 0px 1px white, 0px 0px 1px white;
+}
+
+.platformer .coin-inventory:before{
+	content:"CHEST GOLD";
+	position: absolute;
+	top:0px;
+	left: -45px;
+	font-size: 12px;
+	width: 130px;
+	text-align: center;
+}
+
+.platformer .coin-inventory .chest{
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-position: -50px;
+	display: none;
+}
+
+.platformer .coin-inventory .coin{
+	position: absolute;
+	left: 5px;
+	top: 28px;
+	animation: none;
+}
+
+.platformer .coin-inventory .coin:after{
+	animation: none;
+}
+
+.platformer .coin-inventory .coin-count{
+	color: black;
+	font-size: 20px;
+	position: absolute;
+	left: 20px;
+	top: 15px;
+}
+
+.platformer .coin-inventory .coin-count:before{
+	content: "×";
+}
+

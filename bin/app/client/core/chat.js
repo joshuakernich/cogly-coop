@@ -10,12 +10,17 @@ define(["./html2canvas"], function(html2canvas) {
         
         var $elInputBox = $('<div class="chat-input">').appendTo($elChatBox);
         var $elInput = $('<input>').appendTo($elInputBox);
-        var $elCaptureButton = $('<div class="chat-button screenshot">').appendTo($elChatBox);
-        var $elHintButton = $('<div class="chat-button hint">').appendTo($elChatBox);
-        var $elHelpButton = $('<div class="chat-button help">').appendTo($elChatBox);
+        
+
+        var $elCommands = $('<div class="chat-commands">').appendTo($elChatBox);
+        var $elCaptureButton = $('<div class="chat-button screenshot">').appendTo($elCommands);
+        var $elHintButton = $('<div class="chat-button hint">').appendTo($elCommands);
+        var $elHelpButton = $('<div class="chat-button help">').appendTo($elCommands);
     	var $elCaptureWindow = $('<div class="screenshot-window">').appendTo($elChatBox);
 
         $elCaptureButton.on('click',onScreenCapture.bind(this));
+        $elHintButton.on('click',onHintRequest.bind(this));
+        $elHelpButton.on('click',onHelpRequest.bind(this));
     	$elInput.on('keypress',onKey);
 
         var emotes = [
@@ -41,15 +46,19 @@ define(["./html2canvas"], function(html2canvas) {
             if(origin.id == socket.id) $elMsg.addClass('isMe');
     		$elMsg.appendTo($elStream);
 
-            offset.top -= $elMsg.outerHeight()+5;
-            offset.left -= 80;
+            $elStream.scrollTop($elStream.height());
 
-            $elClone = $elMsg.clone().appendTo($elStream).css('position','fixed');
-            $elMsg.css('opacity',0);
-            $elClone.offset(offset).delay(800).animate($elMsg.offset(),function(){
+            if(offset){
+                offset.top -= $elMsg.outerHeight()+5;
+                offset.left -= 80;
+
+                $elClone = $elMsg.clone().appendTo($elStream).css('position','fixed');
+                $elMsg.css('opacity',0);
+                $elClone.offset(offset).delay(800).animate($elMsg.offset(),function(){
                 $elClone.remove();
                 $elMsg.css('opacity',1);
-            });
+                })
+            }
     	}
 
     	function onKey(e){
@@ -63,8 +72,17 @@ define(["./html2canvas"], function(html2canvas) {
             socket.emit('chat-to-room',msg);
         }
 
+        function onHintRequest(msg){
+            socket.emit('hint-request');
+        }
+
+        function onHelpRequest(){
+            socket.emit('chat-to-room','Teacher help requested')
+        }
+
         function onScreenCapture(e){
             $el.removeClass('untouchable');
+            $elCaptureButton.addClass('active');
 
             var x = 0;
             var y = 0;
@@ -120,6 +138,8 @@ define(["./html2canvas"], function(html2canvas) {
                 $elCaptureWindow.removeClass('snapping');
                 $elCaptureWindow.hide();
 
+
+                $elCaptureButton.removeClass('active');
 
                 send(img.outerHTML);
             }
