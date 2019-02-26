@@ -1,2 +1,4 @@
-var app = require('./app')
-new app()
+require('coffeescript').register()
+
+var App = require('./app')
+new App()

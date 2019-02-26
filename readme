@@ -1,0 +1,5 @@
+ssh cogly@132.148.244.152
+password Joshua#1
+
+cd cogly-coop/bin
+npm start

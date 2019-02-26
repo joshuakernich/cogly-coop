@@ -6,7 +6,8 @@ define([], function() {
     	socket.on('users',onUsers.bind(this));
 
 		this.makeRoom = function(){
-			socket.emit('make room',socket.id);
+      console.log('client make-room');
+			socket.emit('make-room',socket.id);
 		}
 
 		function onUsers(users){
@@ -17,12 +18,18 @@ define([], function() {
 		}
 
 		function onRooms(rooms){
-			console.log('rooms',rooms);
+
 			$('.room-list').empty();
 			for(id in rooms){
-				var $room = $('<div class="room">').appendTo('.room-list').html(id);
+
+        if( rooms[id].length == 1 && Object.keys(rooms[id].sockets)[0] == id ) continue; //this is just a user's personal room
+
+				var $room = $('<div class="room">').appendTo('.room-list').html("ROOM ID:"+id);
 				var room = rooms[id];
-				if(room.sockets[socket.id])$room.addClass('inside');
+        for(iSocket in room.sockets){
+          $room.append("<hr>" + iSocket)
+        }
+				//if(room.sockets[socket.id])$room.addClass('inside');
 			}
 		}
     }
